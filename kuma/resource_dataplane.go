@@ -2,6 +2,7 @@ package kuma
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -35,10 +36,26 @@ func resourceDataplane() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"gateway": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"tags": {
+										Type:     schema.TypeMap,
+										Required: true,
+										Elem: &schema.Schema{
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
 						"inbound": {
 							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"port": {
@@ -51,11 +68,10 @@ func resourceDataplane() *schema.Resource {
 									},
 									"tags": {
 										Type:     schema.TypeMap,
-										Optional: true,
+										Required: true,
 										Elem: &schema.Schema{
-											Type:     schema.TypeMap,
+											Type:     schema.TypeString,
 											Optional: true,
-											Elem:     &schema.Schema{Type: schema.TypeString},
 										},
 									},
 								},
@@ -121,7 +137,7 @@ func resourceDataplaneRead(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("network", flattenKumaNetworking(&dataplane.Networking)); err != nil {
+	if err := d.Set("networking", flattenKumaNetworking(dataplane.Networking)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -129,7 +145,6 @@ func resourceDataplaneRead(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func resourceDataplaneUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// c := m.(*kumaclient.KumaClient)
 	dataplane := createKumaDataplaneFromResourceData(d)
 
 	c := m.(*kumaclient.KumaClient)
@@ -172,11 +187,14 @@ func createKumaDataplaneFromResourceData(d *schema.ResourceData) *kumaclient.Dat
 	dataplane.Mesh = readStringFromResource(d, "mesh")
 	dataplane.Name = readStringFromResource(d, "name")
 
-	if networkingArray := readArrayFromResource(d, "networking"); networkingArray != nil && len(networkingArray) > 0 {
-		networkingMap := networkingArray[0].(map[string]interface{})
-		dataplane.Networking = *createKumaNetworkingFromMap(&networkingMap)
-	}
+	if attr, ok := d.GetOk("networking"); ok {
+		set := attr.(*schema.Set)
 
+		if set.Len() > 0 {
+			networkingMap := set.List()[0].(map[string]interface{})
+			dataplane.Networking = createKumaNetworkingFromMap(&networkingMap)
+		}
+	}
 	return dataplane
 }
 
@@ -190,19 +208,46 @@ func createKumaNetworkingFromMap(data *map[string]interface{}) *kumaclient.Netwo
 			networking.Address = address
 		}
 
+		if dataMap["gateway"] != nil {
+			if gatewayArray := dataMap["gateway"].([]interface{}); gatewayArray != nil && len(gatewayArray) > 0 {
+				gatewayMap := gatewayArray[0].(map[string]interface{})
+				networking.Gateway = createKumaNetworkingGatewayFromArray(&gatewayMap)
+			}
+		}
+
 		if dataMap["inbound"] != nil {
 			if inboundArray := dataMap["inbound"].([]interface{}); inboundArray != nil && len(inboundArray) > 0 {
-				networking.Inbound = *createKumaNetworkingInboundFromArray(&inboundArray)
+				networking.Inbound = createKumaNetworkingInboundFromArray(&inboundArray)
 			}
 		}
 
 		if dataMap["outbound"] != nil {
 			if outboundArray := dataMap["outbound"].([]interface{}); outboundArray != nil && len(outboundArray) > 0 {
-				networking.Outbound = *createKumaNetworkingOutboundFromArray(&outboundArray)
+				networking.Outbound = createKumaNetworkingOutboundFromArray(&outboundArray)
 			}
 		}
 
 		return networking
+	}
+	return nil
+}
+
+func createKumaNetworkingGatewayFromArray(data *map[string]interface{}) *kumaclient.NetworkingGateway {
+	if data != nil {
+		dataMap := *data
+		gateway := kumaclient.NetworkingGateway{}
+
+		if dataMap["tags"] != nil {
+			tags := dataMap["tags"].(map[string]interface{})
+			mapString := make(map[string]string)
+
+			for key, value := range tags {
+				mapString[key] = fmt.Sprintf("%v", value)
+			}
+
+			gateway.Tags = mapString
+		}
+		return &gateway
 	}
 	return nil
 }
@@ -227,8 +272,14 @@ func createKumaNetworkingInboundFromArray(data *[]interface{}) *[]kumaclient.Net
 			}
 
 			if inboundMap["tags"] != nil {
-				tags := inboundMap["tags"].(map[string]string)
-				item.Tags = tags
+				tags := inboundMap["tags"].(map[string]interface{})
+				mapString := make(map[string]string)
+
+				for key, value := range tags {
+					mapString[key] = fmt.Sprintf("%v", value)
+				}
+
+				item.Tags = mapString
 			}
 
 			inbound = append(inbound, item)
@@ -273,6 +324,10 @@ func flattenKumaNetworking(in *kumaclient.Networking) []interface{} {
 
 	m["address"] = in.Address
 
+	if in.Gateway != nil {
+		m["gateway"] = flattenKumaNetworkingGateway(in.Gateway)
+	}
+
 	if in.Inbound != nil {
 		m["inbound"] = flattenKumaNetworkingInbound(in.Inbound)
 	}
@@ -284,14 +339,26 @@ func flattenKumaNetworking(in *kumaclient.Networking) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenKumaNetworkingInbound(in []kumaclient.NetworkingInbound) []interface{} {
+func flattenKumaNetworkingGateway(in *kumaclient.NetworkingGateway) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+	m := make(map[string]interface{})
+
+	m["tags"] = in.Tags
+
+	return []interface{}{m}
+}
+
+func flattenKumaNetworkingInbound(in *[]kumaclient.NetworkingInbound) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
 
-	flatList := make([]interface{}, len(in))
+	inbound := *in
+	flatList := make([]interface{}, 0, len(inbound))
 
-	for _, item := range in {
+	for _, item := range inbound {
 		s := make(map[string]interface{})
 
 		s["port"] = item.Port
@@ -304,14 +371,15 @@ func flattenKumaNetworkingInbound(in []kumaclient.NetworkingInbound) []interface
 	return flatList
 }
 
-func flattenKumaNetworkingOutbound(in []kumaclient.NetworkingOutbound) []interface{} {
+func flattenKumaNetworkingOutbound(in *[]kumaclient.NetworkingOutbound) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
 
-	flatList := make([]interface{}, len(in))
+	outbound := *in
+	flatList := make([]interface{}, 0, len(outbound))
 
-	for _, item := range in {
+	for _, item := range outbound {
 		s := make(map[string]interface{})
 
 		s["port"] = item.Port

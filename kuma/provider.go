@@ -27,7 +27,9 @@ func Provider() *schema.Provider {
 			"kuma_mesh":      resourceMesh(),
 			"kuma_dataplane": resourceDataplane(),
 		},
-		DataSourcesMap:       map[string]*schema.Resource{},
+		DataSourcesMap: map[string]*schema.Resource{
+			"kuma_mesh": dataSourceKumaMesh(),
+		},
 		ConfigureContextFunc: providerConfigure,
 	}
 }
@@ -35,19 +37,18 @@ func Provider() *schema.Provider {
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	apiToken := d.Get("api_token").(string)
 
-	var host *string
+	var host string
 
-	hVal, ok := d.GetOk("host")
+	hostVal, ok := d.GetOk("host")
 	if ok {
-		tempHost := hVal.(string)
-		host = &tempHost
+		host = hostVal.(string)
 	}
 
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
 	if apiToken != "" {
-		c, err := kumaclient.NewClient(*host, apiToken)
+		c, err := kumaclient.NewClient(host, apiToken)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
@@ -66,5 +67,6 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		Summary:  "Unable to create Kuma client",
 		Detail:   "Unable to create anonymous Kuma client",
 	})
+
 	return nil, diags
 }

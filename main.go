@@ -36,10 +36,17 @@ func main() {
 // 	tags["service"] = "backend"
 // 	tags["kuma.io/service"] = "backend"
 
-// 	dataplane := kumaclient.NewDataplane(mesh.Name, "testing-dp", "127.0.0.1", kumaclient.NetworkingInbound{
-// 		Port: 11011,
-// 		Tags: tags,
-// 	})
+// 	dataplane := kumaclient.DataPlane{
+// 		Type: "Dataplane",
+// 		Mesh: mesh.Name,
+// 		Name: "testing-dp",
+// 		Networking: &kumaclient.Networking{
+// 			Address: "127.0.0.1",
+// 			Gateway: &kumaclient.NetworkingGateway{
+// 				Tags: tags,
+// 			},
+// 		},
+// 	}
 
 // 	err := client.UpsertDataplane(dataplane)
 

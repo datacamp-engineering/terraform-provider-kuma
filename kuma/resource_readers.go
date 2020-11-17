@@ -13,6 +13,5 @@ func readArrayFromResource(d *schema.ResourceData, key string) []interface{} {
 	if attr, ok := d.GetOk(key); ok {
 		return attr.([]interface{})
 	}
-
 	return nil
 }
