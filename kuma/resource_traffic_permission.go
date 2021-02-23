@@ -3,6 +3,7 @@ package kuma
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -32,10 +33,12 @@ func resourceTraficPermission() *schema.Resource {
 			"mesh": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"sources": {
 				Type:     schema.TypeSet,
@@ -74,7 +77,7 @@ func resourceTraficPermission() *schema.Resource {
 }
 
 func resourceTrafficPermissionCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	store := *m.(*core_store.ResourceStore)
+	store := m.(core_store.ResourceStore)
 
 	permission := createKumaTrafficPermissionFromResourceData(d)
 
@@ -92,7 +95,7 @@ func resourceTrafficPermissionCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceTrafficPermissionRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	store := *m.(*core_store.ResourceStore)
+	store := m.(core_store.ResourceStore)
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
@@ -131,31 +134,36 @@ func resourceTrafficPermissionRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceTrafficPermissionUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	store := *m.(*core_store.ResourceStore)
+	if d.HasChange("sources") || d.HasChange("destinations") {
+		store := m.(core_store.ResourceStore)
 
-	meshName := readStringFromResource(d, "mesh")
-	name := readStringFromResource(d, "name")
-	permission := createKumaTrafficPermissionFromResourceData(d)
+		meshName := readStringFromResource(d, "mesh")
+		name := readStringFromResource(d, "name")
+		permission := createKumaTrafficPermissionFromResourceData(d)
 
-	oldPermission := mesh.TrafficPermissionResource{
-		Spec: &mesh_proto.TrafficPermission{},
+		oldPermission := mesh.TrafficPermissionResource{
+			Spec: &mesh_proto.TrafficPermission{},
+		}
+
+		err := store.Get(ctx, &oldPermission, core_store.GetByKey(name, meshName))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		permission.Meta = oldPermission.Meta
+
+		err = store.Update(ctx, &permission)
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
-	err := store.Get(ctx, &oldPermission, core_store.GetByKey(name, meshName))
-
-	permission.Meta = oldPermission.Meta
-
-	err = store.Update(ctx, &permission)
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	return resourceDataplaneRead(ctx, d, m)
+	return resourceTrafficPermissionRead(ctx, d, m)
 }
 
 func resourceTrafficPermissionDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	store := *m.(*core_store.ResourceStore)
+	store := m.(core_store.ResourceStore)
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
@@ -183,49 +191,47 @@ func createKumaTrafficPermissionFromResourceData(data *schema.ResourceData) mesh
 	}
 
 	if attr, ok := data.GetOk("sources"); ok {
-		sourcesArray := attr.([]interface{})
+		sourcesArray := attr.(*schema.Set)
 
-		if sourcesArray != nil && len(sourcesArray) > 0 {
-			permission.Spec.Sources = createKumaSelectorFromArray(&sourcesArray)
+		if sourcesArray != nil && sourcesArray.Len() > 0 {
+			permission.Spec.Sources = createKumaSelectorFromArray(sourcesArray)
 		}
 	}
 
 	if attr, ok := data.GetOk("destinations"); ok {
-		destinationsArray := attr.([]interface{})
+		destinationsArray := attr.(*schema.Set)
 
-		if destinationsArray != nil && len(destinationsArray) > 0 {
-			permission.Spec.Destinations = createKumaSelectorFromArray(&destinationsArray)
+		if destinationsArray != nil && destinationsArray.Len() > 0 {
+			permission.Spec.Destinations = createKumaSelectorFromArray(destinationsArray)
 		}
 	}
 
 	return permission
 }
 
-func createKumaSelectorFromArray(data *[]interface{}) []*mesh_proto.Selector {
-	if data != nil {
-		dataList := *data
-		selector := []*mesh_proto.Selector{}
+func createKumaSelectorFromArray(data *schema.Set) []*mesh_proto.Selector {
+	dataList := data.List()
+	selector := []*mesh_proto.Selector{}
 
-		for _, selectorData := range dataList {
-			selectorMap := selectorData.(map[string]interface{})
-			item := mesh_proto.Selector{}
+	for _, selectorData := range dataList {
+		log.Printf("[DEBUG] kumaSelectorFromArray: %s", selectorData)
+		selectorMap := selectorData.(map[string]interface{})
+		item := mesh_proto.Selector{}
 
-			if selectorMap["match"] != nil {
-				tags := selectorMap["match"].(map[string]interface{})
-				mapString := make(map[string]string)
+		if selectorMap["match"] != nil && len(selectorMap["match"].(map[string]interface{})) > 0 {
+			tags := selectorMap["match"].(map[string]interface{})
+			mapString := make(map[string]string)
 
-				for key, value := range tags {
-					mapString[key] = fmt.Sprintf("%v", value)
-				}
-
-				item.Match = mapString
+			for key, value := range tags {
+				mapString[key] = fmt.Sprintf("%v", value)
 			}
-		}
 
-		return selector
+			item.Match = mapString
+			selector = append(selector, &item)
+		}
 	}
 
-	return nil
+	return selector
 }
 
 func flattenKumaSelector(selectors []*mesh_proto.Selector) []interface{} {
