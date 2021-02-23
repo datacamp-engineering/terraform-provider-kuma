@@ -5,7 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nickvdyck/terraform-provider-kuma/kumaclient"
+
+	config_proto "github.com/kumahq/kuma/pkg/config/app/kumactl/v1alpha1"
 )
 
 // Provider -
@@ -48,7 +49,12 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	var diags diag.Diagnostics
 
 	if apiToken != "" {
-		c, err := kumaclient.NewClient(host, apiToken)
+
+		cp := &config_proto.ControlPlaneCoordinates_ApiServer{
+			Url: host,
+		}
+
+		c, err := NewResourceStore(cp)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
