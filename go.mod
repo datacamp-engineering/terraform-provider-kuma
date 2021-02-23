@@ -4,7 +4,8 @@ go 1.15
 
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.2.0
-	github.com/kumahq/kuma v0.0.0-20210223093449-638b0a5fcc1f // indirect
+	github.com/kumahq/kuma v0.0.0-20210223093449-638b0a5fcc1f
+	github.com/kumahq/kuma/api v0.0.0-00010101000000-000000000000
 )
 
 replace (
