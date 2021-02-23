@@ -25,12 +25,8 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"kuma_mesh":      resourceMesh(),
-			"kuma_dataplane": resourceDataplane(),
 		},
-		DataSourcesMap: map[string]*schema.Resource{
-			"kuma_mesh": dataSourceKumaMesh(),
-		},
+		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
 	}
 }
