@@ -5,10 +5,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nickvdyck/terraform-provider-kuma/kumaclient"
+
+	config_proto "github.com/kumahq/kuma/pkg/config/app/kumactl/v1alpha1"
 )
 
-// Provider -
+// Provider returns a *schema.Provider.
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
@@ -24,12 +25,9 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"kuma_mesh":      resourceMesh(),
-			"kuma_dataplane": resourceDataplane(),
+			"kuma_traffic_permission": resourceTrafficPermission(),
 		},
-		DataSourcesMap: map[string]*schema.Resource{
-			"kuma_mesh": dataSourceKumaMesh(),
-		},
+		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
 	}
 }
@@ -48,7 +46,12 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	var diags diag.Diagnostics
 
 	if apiToken != "" {
-		c, err := kumaclient.NewClient(host, apiToken)
+
+		cp := &config_proto.ControlPlaneCoordinates_ApiServer{
+			Url: host,
+		}
+
+		c, err := newResourceStore(cp)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,

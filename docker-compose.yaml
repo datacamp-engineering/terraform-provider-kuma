@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   cp:
-    image: kong-docker-kuma-docker.bintray.io/kuma-cp:0.7.3
+    image: kong-docker-kuma-docker.bintray.io/kuma-cp:1.0.8
     command: run
     ports:
       - '5681:5681'

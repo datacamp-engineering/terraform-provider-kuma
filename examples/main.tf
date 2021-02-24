@@ -3,39 +3,23 @@ provider "kuma" {
   api_token = "test123"
 }
 
-data "kuma_mesh" "default" {
-  name = "default"
-}
+resource "kuma_traffic_permission" "yolo_permission" {
+  mesh = "default"
+  name = "yolo_permission"
 
-resource "kuma_dataplane" "yolo_data" {
-  mesh = data.kuma_mesh.default.name
-  name = "yolo_data"
-
-  networking {
-    address = "10.0.0.1"
-
-    # gateway {
-    #   tags = {
-    #     "kuma.io/service" = "test"
-    #   }
-    # }
-
-    inbound {
-      port = 3000
-      tags = {
-        "Project" : "unicorn"
-        "kuma.io/service" = "test"
-      }
-    }
-
-    outbound {
-      port    = 80
-      service = "some-backend"
-    }
-
-    outbound {
-      port    = 8000
-      service = "some-other-backend"
+  sources {
+    match = {
+      "kuma.io/service" = "*"
     }
   }
+
+  destinations {
+    match = {
+      "kuma.io/service" = "*"
+    }
+  }
+}
+
+output "yolo_permission_name" {
+  value = kuma_traffic_permission.yolo_permission.name
 }

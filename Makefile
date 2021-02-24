@@ -4,7 +4,7 @@ NAMESPACE=edu
 NAME=kuma
 BINARY=terraform-provider-${NAME}
 VERSION=0.1
-OS_ARCH=linux_amd64
+OS_ARCH=darwin_amd64
 
 default: install
 
@@ -26,12 +26,18 @@ release:
 	GOOS=windows GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_windows_amd64
 
 install: build
-	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
-	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
+	mkdir -p ~/.terraform.d/plugins/${OS_ARCH}
+	mkdir -p ./examples/.terraform/plugins/${OS_ARCH}
+	cp ./bin/${BINARY} ~/.terraform.d/plugins/${OS_ARCH}
+	cp ./bin/${BINARY} ./examples/.terraform/plugins/${OS_ARCH}
 
+setup:
+	curl https://releases.hashicorp.com/terraform/0.12.30/terraform_0.12.30_${OS_ARCH}.zip -o /tmp/terraform_0.12.30.zip
+	unzip /tmp/terraform_0.12.30.zip -d ./test
+
+.PHONY: test
 test: 
-	go test -i $(TEST) || exit 1
-	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
+	cd test && PATH=$(PWD)/test:${PATH} go test
 
 testacc: 
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
