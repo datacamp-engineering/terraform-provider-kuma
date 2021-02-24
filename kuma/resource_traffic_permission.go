@@ -13,7 +13,7 @@ import (
 	core_store "github.com/kumahq/kuma/pkg/core/resources/store"
 )
 
-func resourceTraficPermission() *schema.Resource {
+func resourceTrafficPermission() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceTrafficPermissionCreate,
 		ReadContext:   resourceTrafficPermissionRead,

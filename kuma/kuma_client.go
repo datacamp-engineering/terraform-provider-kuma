@@ -8,7 +8,7 @@ import (
 	remote_resources "github.com/kumahq/kuma/pkg/plugins/resources/remote"
 )
 
-func NewResourceStore(coordinates *config_proto.ControlPlaneCoordinates_ApiServer) (core_store.ResourceStore, error) {
+func newResourceStore(coordinates *config_proto.ControlPlaneCoordinates_ApiServer) (core_store.ResourceStore, error) {
 	client, err := kumactl_client.ApiServerClient(coordinates)
 	if err != nil {
 		return nil, err

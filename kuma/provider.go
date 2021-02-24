@@ -25,7 +25,7 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"kuma_traffic_permission": resourceTraficPermission(),
+			"kuma_traffic_permission": resourceTrafficPermission(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
@@ -51,7 +51,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 			Url: host,
 		}
 
-		c, err := NewResourceStore(cp)
+		c, err := newResourceStore(cp)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
