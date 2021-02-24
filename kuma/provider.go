@@ -9,7 +9,7 @@ import (
 	config_proto "github.com/kumahq/kuma/pkg/config/app/kumactl/v1alpha1"
 )
 
-// Provider -
+// Provider returns a *schema.Provider.
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{

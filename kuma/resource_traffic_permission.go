@@ -13,16 +13,6 @@ import (
 	core_store "github.com/kumahq/kuma/pkg/core/resources/store"
 )
 
-// type: TrafficPermission
-// name: allow-all-traffic
-// mesh: default
-// sources:
-//   - match:
-//       kuma.io/service: '*'
-// destinations:
-//   - match:
-//       kuma.io/service: '*'
-
 func resourceTraficPermission() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceTrafficPermissionCreate,
