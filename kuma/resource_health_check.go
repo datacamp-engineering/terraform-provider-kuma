@@ -16,6 +16,7 @@ func resourceHealthCheck() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceHealthCheckCreate,
 		ReadContext:   resourceHealthCheckRead,
+		UpdateContext: resourceHealthCheckUpdate,
 		Schema: map[string]*schema.Schema{
 			"mesh": {
 				Type:     schema.TypeString,
@@ -213,6 +214,36 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, m inte
 	}
 
 	return diags
+}
+
+func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	if d.HasChanges("sources", "destinations", "conf") {
+		store := m.(core_store.ResourceStore)
+
+		name := d.Id()
+		meshName := d.Get("mesh").(string)
+
+		healthCheck := createKumaHealthCheckFromResourceData(d)
+
+		oldHealthCheck := mesh.HealthCheckResource{
+			Spec: &mesh_proto.HealthCheck{},
+		}
+
+		err := store.Get(ctx, &oldHealthCheck, core_store.GetByKey(name, meshName))
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		healthCheck.Meta = oldHealthCheck.Meta
+
+		err = store.Update(ctx, &healthCheck)
+
+		if err != nil {
+			return diag.FromErr((err))
+		}
+	}
+
+	return resourceTrafficPermissionRead(ctx, d, m)
 }
 
 func createKumaHealthCheckFromResourceData(data *schema.ResourceData) mesh.HealthCheckResource {
