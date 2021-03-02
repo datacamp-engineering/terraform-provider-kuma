@@ -246,6 +246,26 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, m in
 	return resourceTrafficPermissionRead(ctx, d, m)
 }
 
+func resourceHealthCheckDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	store := m.(core_store.ResourceStore)
+	var diags diag.Diagnostics
+
+	name := d.Id()
+	meshName := d.Get("mesh").(string)
+
+	healthCheck := createKumaHealthCheckFromResourceData(d)
+
+	err := store.Delete(ctx, &healthCheck, core_store.DeleteByKey(name, meshName))
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+
+	return diags
+}
+
 func createKumaHealthCheckFromResourceData(data *schema.ResourceData) mesh.HealthCheckResource {
 	healthCheck := mesh.HealthCheckResource{
 		Spec: &mesh_proto.HealthCheck{},
