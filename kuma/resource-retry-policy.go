@@ -62,25 +62,28 @@ func resourceRetry() *schema.Resource {
 				},
 			},
 			"conf": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeSet,
+				MaxItems: 1,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeSet,
+							MaxItems: 1,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"numRetries": {
 										Type:     schema.TypeInt,
-										Required: false,
+										Optional: false,
 									},
 									"perTryTimeout": {
 										Type:     schema.TypeString,
 										Required: false,
 									},
 									"backOff": {
-										Type:     schema.TypeMap,
+										Type:     schema.TypeSet,
+										MaxItems: 1,
 										Required: false,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -103,7 +106,8 @@ func resourceRetry() *schema.Resource {
 							},
 						},
 						"grpc": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeSet,
+							MaxItems: 1,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -116,7 +120,8 @@ func resourceRetry() *schema.Resource {
 										Required: false,
 									},
 									"backOff": {
-										Type:     schema.TypeMap,
+										Type:     schema.TypeSet,
+										MaxItems: 1,
 										Required: false,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -139,7 +144,8 @@ func resourceRetry() *schema.Resource {
 							},
 						},
 						"tcp": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeSet,
+							MaxItems: 1,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -441,7 +447,7 @@ func flattenKumaRetryConfHTTP(http *mesh_proto.Retry_Conf_Http) map[string]inter
 	}
 
 	if http.BackOff != nil {
-		httpMap["backOff"] = flattenKumaHealthCheckConfBackoff(http.BackOff)
+		httpMap["backOff"] = flattenKumaRetryConfBackoff(http.BackOff)
 	}
 
 	if http.RetriableStatusCodes != nil {
@@ -469,7 +475,7 @@ func flattenKumaRetryConfGRPC(grpc *mesh_proto.Retry_Conf_Grpc) map[string]inter
 	}
 
 	if grpc.BackOff != nil {
-		grpcMap["backOff"] = flattenKumaHealthCheckConfBackoff(grpc.BackOff)
+		grpcMap["backOff"] = flattenKumaRetryConfBackoff(grpc.BackOff)
 	}
 
 	if grpc.RetryOn != nil {
@@ -495,7 +501,7 @@ func flattenKumaRetryConfTCP(tcp *mesh_proto.Retry_Conf_Tcp) map[string]interfac
 	return tcpMap
 }
 
-func flattenKumaHealthCheckConfBackoff(backoff *mesh_proto.Retry_Conf_BackOff) map[string]interface{} {
+func flattenKumaRetryConfBackoff(backoff *mesh_proto.Retry_Conf_BackOff) map[string]interface{} {
 	backOffMap := make(map[string]interface{})
 
 	if backoff != nil {
