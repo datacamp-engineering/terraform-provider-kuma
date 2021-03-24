@@ -78,8 +78,9 @@ func resourceRetry() *schema.Resource {
 										Optional: true,
 									},
 									"pertrytimeout": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:             schema.TypeString,
+										Optional:         true,
+										DiffSuppressFunc: diffDurations,
 									},
 									"backoff": {
 										Type:     schema.TypeList,
@@ -88,12 +89,14 @@ func resourceRetry() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"baseinterval": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:             schema.TypeString,
+													Required:         true,
+													DiffSuppressFunc: diffDurations,
 												},
 												"maxinterval": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:             schema.TypeString,
+													Required:         true,
+													DiffSuppressFunc: diffDurations,
 												},
 											},
 										},
@@ -167,6 +170,27 @@ func resourceRetry() *schema.Resource {
 			},
 		},
 	}
+}
+
+// A hack to make sure changes in duration are picked up correctly
+// This is needed because if we go from a duration to a string, it's not always
+// possible to go back to the original string eg 1.5h => 1h30m0s.
+// This is annoying because at that point we will store 1h30m0s into the state.
+// When doing the diff again this get's picked up as a change.
+func diffDurations(k, old string, new string, d *schema.ResourceData) bool {
+	oldDuration, err := readDurationFromString(old)
+
+	if err != nil {
+		return false
+	}
+
+	newDuration, err := readDurationFromString(new)
+
+	if err != nil {
+		return false
+	}
+
+	return oldDuration.AsDuration().String() == newDuration.AsDuration().String()
 }
 
 func resourceRetryCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -447,7 +471,7 @@ func flattenKumaRetryConfHTTP(http *mesh_proto.Retry_Conf_Http) []interface{} {
 	}
 
 	if http.PerTryTimeout != nil {
-		httpMap["pertrytimeout"] = http.PerTryTimeout.String()
+		httpMap["pertrytimeout"] = http.PerTryTimeout.AsDuration().String()
 	}
 
 	if http.BackOff != nil {
@@ -521,11 +545,11 @@ func flattenKumaRetryConfBackoff(backoff *mesh_proto.Retry_Conf_BackOff) []inter
 	}
 
 	if backoff.BaseInterval != nil {
-		backOffMap["baseinterval"] = backoff.BaseInterval.String()
+		backOffMap["baseinterval"] = backoff.BaseInterval.AsDuration().String()
 	}
 
 	if backoff.MaxInterval != nil {
-		backOffMap["maxinterval"] = backoff.MaxInterval.String()
+		backOffMap["maxinterval"] = backoff.MaxInterval.AsDuration().String()
 	}
 
 	backOffSet = append(backOffSet, backOffMap)
