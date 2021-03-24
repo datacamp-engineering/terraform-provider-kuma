@@ -44,7 +44,6 @@ resource "kuma_retry" "yolo_retry" {
           maxinterval = "1s"
         }
         retriablestatuscodes = [500,504]
-
       }
     }
 }

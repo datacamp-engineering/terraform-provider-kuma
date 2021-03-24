@@ -62,13 +62,13 @@ func resourceRetry() *schema.Resource {
 				},
 			},
 			"conf": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -82,7 +82,7 @@ func resourceRetry() *schema.Resource {
 										Optional: true,
 									},
 									"backoff": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -109,7 +109,7 @@ func resourceRetry() *schema.Resource {
 							},
 						},
 						"grpc": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -123,7 +123,7 @@ func resourceRetry() *schema.Resource {
 										Optional: true,
 									},
 									"backoff": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -150,7 +150,7 @@ func resourceRetry() *schema.Resource {
 							},
 						},
 						"tcp": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -222,7 +222,7 @@ func resourceRetryRead(ctx context.Context, d *schema.ResourceData, m interface{
 	if err := d.Set("destinations", flattenKumaSelector(retry.Spec.Destinations)); err != nil {
 		return diag.FromErr(err)
 	}
-	// emptyList := make([]interface{}, 0, 1)
+
 	if err := d.Set("conf", flattenKumaRetryConf(retry.Spec.Conf)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -305,8 +305,8 @@ func createKumaRetryFromResourceData(data *schema.ResourceData) mesh.RetryResour
 
 	if attr, ok := data.GetOk("conf"); ok {
 
-		if confArray := attr.(*schema.Set); confArray != nil && confArray.Len() > 0 {
-			retry.Spec.Conf = createKumaRetryConfFromMap(confArray.List()[0].(map[string]interface{}))
+		if confArray := attr.([]interface{}); confArray != nil && len(confArray) > 0 {
+			retry.Spec.Conf = createKumaRetryConfFromMap(confArray[0].(map[string]interface{}))
 		}
 	}
 
@@ -316,16 +316,16 @@ func createKumaRetryFromResourceData(data *schema.ResourceData) mesh.RetryResour
 func createKumaRetryConfFromMap(confMap map[string]interface{}) *mesh_proto.Retry_Conf {
 	conf := &mesh_proto.Retry_Conf{}
 
-	if http, ok := confMap["http"].(*schema.Set); ok && http.Len() > 0 {
-		conf.Http = createKumaRetryConfHTTPFromMap(http.List()[0].(map[string]interface{}))
+	if http, ok := confMap["http"].([]interface{}); ok && len(http) > 0 {
+		conf.Http = createKumaRetryConfHTTPFromMap(http[0].(map[string]interface{}))
 	}
 
-	if grpc, ok := confMap["grpc"].(*schema.Set); ok && grpc.Len() > 0 {
-		conf.Grpc = createKumaRetryConfGRPCFromMap(grpc.List()[0].(map[string]interface{}))
+	if grpc, ok := confMap["grpc"].([]interface{}); ok && len(grpc) > 0 {
+		conf.Grpc = createKumaRetryConfGRPCFromMap(grpc[0].(map[string]interface{}))
 	}
 
-	if tcp, ok := confMap["tcp"].(*schema.Set); ok && tcp.Len() > 0 {
-		conf.Tcp = createKumaRetryConfTCPFromMap(tcp.List()[0].(map[string]interface{}))
+	if tcp, ok := confMap["tcp"].([]interface{}); ok && len(tcp) > 0 {
+		conf.Tcp = createKumaRetryConfTCPFromMap(tcp[0].(map[string]interface{}))
 	}
 
 	return conf
@@ -343,23 +343,21 @@ func createKumaRetryConfHTTPFromMap(httpMap map[string]interface{}) *mesh_proto.
 		http.PerTryTimeout = duration
 	}
 
-	if backOffSet, ok := httpMap["backoff"].(*schema.Set); ok && backOffSet.Len() > 0 {
-		http.BackOff = createKumaRetryConfHTTPBackOffFromMap(backOffSet.List()[0].(map[string]interface{}))
+	if backOffSet, ok := httpMap["backoff"].([]interface{}); ok && len(backOffSet) > 0 {
+		http.BackOff = createKumaRetryConfHTTPBackOffFromMap(backOffSet[0].(map[string]interface{}))
 	}
 
-	if retiableStatusCodes, ok := httpMap["retriablestatuscodes"].([]int); ok {
-		uIntArray := []uint32{}
+	if retriableStatusCodes, ok := httpMap["retriablestatuscodes"].([]interface{}); ok {
+		uIntArray := make([]uint32, 0, len(http.RetriableStatusCodes))
 
-		for _, data := range retiableStatusCodes {
-
-			uIntArray = append(uIntArray, uint32(data))
+		for _, data := range retriableStatusCodes {
+			uIntArray = append(uIntArray, uint32(data.(int)))
 		}
 
 		http.RetriableStatusCodes = uIntArray
 	}
 
 	return http
-
 }
 
 func createKumaRetryConfGRPCFromMap(grpcMap map[string]interface{}) *mesh_proto.Retry_Conf_Grpc {
@@ -457,8 +455,12 @@ func flattenKumaRetryConfHTTP(http *mesh_proto.Retry_Conf_Http) []interface{} {
 	}
 
 	if http.RetriableStatusCodes != nil {
-		httpMap["retriablestatuscodes"] = http.RetriableStatusCodes
+		intArray := make([]int, 0, len(http.RetriableStatusCodes))
 
+		for _, data := range http.RetriableStatusCodes {
+			intArray = append(intArray, int(data))
+		}
+		httpMap["retriablestatuscodes"] = intArray
 	}
 
 	httpSet = append(httpSet, httpMap)
@@ -514,16 +516,16 @@ func flattenKumaRetryConfBackoff(backoff *mesh_proto.Retry_Conf_BackOff) []inter
 	backOffMap := make(map[string]interface{})
 	backOffSet := make([]interface{}, 0, 1)
 
-	if backoff != nil {
+	if backoff == nil {
 		return backOffSet
 	}
 
 	if backoff.BaseInterval != nil {
-		backOffMap["baseinterval"] = backoff.BaseInterval
+		backOffMap["baseinterval"] = backoff.BaseInterval.String()
 	}
 
 	if backoff.MaxInterval != nil {
-		backOffMap["maxinterval"] = backoff.MaxInterval
+		backOffMap["maxinterval"] = backoff.MaxInterval.String()
 	}
 
 	backOffSet = append(backOffSet, backOffMap)
