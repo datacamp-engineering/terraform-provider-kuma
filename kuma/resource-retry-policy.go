@@ -222,7 +222,7 @@ func resourceRetryRead(ctx context.Context, d *schema.ResourceData, m interface{
 	if err := d.Set("destinations", flattenKumaSelector(retry.Spec.Destinations)); err != nil {
 		return diag.FromErr(err)
 	}
-
+	// emptyList := make([]interface{}, 0, 1)
 	if err := d.Set("conf", flattenKumaRetryConf(retry.Spec.Conf)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -338,16 +338,16 @@ func createKumaRetryConfHTTPFromMap(httpMap map[string]interface{}) *mesh_proto.
 		http.NumRetries = &wrappers.UInt32Value{Value: uint32(numRetries)}
 	}
 
-	if interval, ok := httpMap["interval"].(string); ok {
+	if interval, ok := httpMap["pertrytimeout"].(string); ok {
 		duration, _ := readDurationFromString(interval)
 		http.PerTryTimeout = duration
 	}
 
-	if backOffMap, ok := httpMap["backoff"].(map[string]interface{}); ok {
-		http.BackOff = createKumaRetryConfHTTPBackOffFromMap(backOffMap)
+	if backOffSet, ok := httpMap["backoff"].(*schema.Set); ok && backOffSet.Len() > 0 {
+		http.BackOff = createKumaRetryConfHTTPBackOffFromMap(backOffSet.List()[0].(map[string]interface{}))
 	}
 
-	if retiableStatusCodes, ok := httpMap["expected_statuses"].([]int); ok {
+	if retiableStatusCodes, ok := httpMap["retriablestatuscodes"].([]int); ok {
 		uIntArray := []uint32{}
 
 		for _, data := range retiableStatusCodes {
@@ -414,7 +414,7 @@ func createKumaRetryConfHTTPBackOffFromMap(backOffMap map[string]interface{}) *m
 
 func flattenKumaRetryConf(conf *mesh_proto.Retry_Conf) []interface{} {
 	confMap := make(map[string]interface{})
-	confSet := make([]interface{}, 1)
+	confSet := make([]interface{}, 0, 1)
 
 	if conf == nil {
 		return confSet
@@ -438,7 +438,7 @@ func flattenKumaRetryConf(conf *mesh_proto.Retry_Conf) []interface{} {
 func flattenKumaRetryConfHTTP(http *mesh_proto.Retry_Conf_Http) []interface{} {
 	httpMap := make(map[string]interface{})
 
-	httpSet := make([]interface{}, 1)
+	httpSet := make([]interface{}, 0, 1)
 
 	if http == nil {
 		return httpSet
@@ -468,7 +468,7 @@ func flattenKumaRetryConfHTTP(http *mesh_proto.Retry_Conf_Http) []interface{} {
 
 func flattenKumaRetryConfGRPC(grpc *mesh_proto.Retry_Conf_Grpc) []interface{} {
 	grpcMap := make(map[string]interface{})
-	grpcSet := make([]interface{}, 1)
+	grpcSet := make([]interface{}, 0, 1)
 	if grpc == nil {
 		return grpcSet
 	}
@@ -512,7 +512,7 @@ func flattenKumaRetryConfTCP(tcp *mesh_proto.Retry_Conf_Tcp) []interface{} {
 
 func flattenKumaRetryConfBackoff(backoff *mesh_proto.Retry_Conf_BackOff) []interface{} {
 	backOffMap := make(map[string]interface{})
-	backOffSet := make([]interface{}, 1)
+	backOffSet := make([]interface{}, 0, 1)
 
 	if backoff != nil {
 		return backOffSet
