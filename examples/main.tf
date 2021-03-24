@@ -3,22 +3,22 @@ provider "kuma" {
   api_token = "test123"
 }
 
-resource "kuma_traffic_permission" "yolo_permission" {
-  mesh = "default"
-  name = "yolo_permission"
+# resource "kuma_traffic_permission" "yolo_permission" {
+#   mesh = "default"
+#   name = "yolo_permission"
 
-  sources {
-    match = {
-      "kuma.io/service" = "*"
-    }
-  }
+#   sources {
+#     match = {
+#       "kuma.io/service" = "*"
+#     }
+#   }
 
-  destinations {
-    match = {
-      "kuma.io/service" = "*"
-    }
-  }
-}
+#   destinations {
+#     match = {
+#       "kuma.io/service" = "*"
+#     }
+#   }
+# }
 
 resource "kuma_retry" "yolo_retry" {
   mesh = "default"
@@ -36,20 +36,21 @@ resource "kuma_retry" "yolo_retry" {
     }
   }
   conf {
-      http = {
-        numRetries = 5
-        perTryTimeout = "200ms"
-        backOff = {
-          baseInterval = "20ms",
-          maxInterval = "1s"
+      http {
+        numretries = 5
+        pertrytimeout = "200ms"
+        backoff {
+          baseinterval = "20ms"
+          maxinterval = "1s"
         }
-        retriableStatusCodes = [500,504]
+        retriablestatuscodes = [500,504]
 
       }
     }
 }
 
 
-output "yolo_permission_name" {
-  value = kuma_traffic_permission.yolo_permission.name
-}
+# output "yolo_permission_name" {
+#   # value = kuma_traffic_permission.yolo_permission.name
+#   # value2 = kuma_retry.yolo_retry.name
+# }
