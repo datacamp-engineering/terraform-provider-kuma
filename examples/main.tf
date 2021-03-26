@@ -44,6 +44,16 @@ resource "kuma_retry" "yolo_retry" {
           maxinterval = "1s"
         }
         retriablestatuscodes = [500,504]
+
+      }
+      grpc {
+        numretries = 5
+        pertrytimeout = "300ms"
+        backoff {
+          baseinterval = "20ms"
+          maxinterval = "1s"
+        }
+
       }
     }
 }
