@@ -3,26 +3,26 @@ provider "kuma" {
   api_token = "test123"
 }
 
-# resource "kuma_traffic_permission" "yolo_permission" {
-#   mesh = "default"
-#   name = "yolo_permission"
-
-#   sources {
-#     match = {
-#       "kuma.io/service" = "*"
-#     }
-#   }
-
-#   destinations {
-#     match = {
-#       "kuma.io/service" = "*"
-#     }
-#   }
-# }
-
-resource "kuma_retry" "yolo_retry" {
+resource "kuma_traffic_permission" "test_permission" {
   mesh = "default"
-  name = "yolo_retry"
+  name = "test_permission"
+
+  sources {
+    match = {
+      "kuma.io/service" = "*"
+    }
+  }
+
+  destinations {
+    match = {
+      "kuma.io/service" = "*"
+    }
+  }
+}
+
+resource "kuma_retry" "test_retry" {
+  mesh = "default"
+  name = "test_retry"
 
   sources {
     match = {
@@ -37,21 +37,21 @@ resource "kuma_retry" "yolo_retry" {
   }
   conf {
       http {
-        numretries = 5
-        pertrytimeout = "200ms"
+        num_retries = 5
+        per_try_timeout = "200ms"
         backoff {
-          baseinterval = "20ms"
-          maxinterval = "1s"
+          base_interval = "20ms"
+          max_interval = "1s"
         }
-        retriablestatuscodes = [500,504]
+        retriable_status_codes = [500,504]
 
       }
       grpc {
-        numretries = 5
-        pertrytimeout = "300ms"
+        num_retries = 5
+        per_try_timeout = "300ms"
         backoff {
-          baseinterval = "20ms"
-          maxinterval = "1s"
+          base_interval = "20ms"
+          max_interval = "1s"
         }
 
       }

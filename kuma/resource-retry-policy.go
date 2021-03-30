@@ -73,11 +73,11 @@ func resourceRetry() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"numretries": {
+									"num_retries": {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"pertrytimeout": {
+									"per_try_timeout": {
 										Type:             schema.TypeString,
 										Optional:         true,
 										DiffSuppressFunc: diffDurations,
@@ -88,12 +88,12 @@ func resourceRetry() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"baseinterval": {
+												"base_interval": {
 													Type:             schema.TypeString,
 													Required:         true,
 													DiffSuppressFunc: diffDurations,
 												},
-												"maxinterval": {
+												"max_interval": {
 													Type:             schema.TypeString,
 													Required:         true,
 													DiffSuppressFunc: diffDurations,
@@ -101,7 +101,7 @@ func resourceRetry() *schema.Resource {
 											},
 										},
 									},
-									"retriablestatuscodes": {
+									"retriable_status_codes": {
 										Type: schema.TypeList,
 										Elem: &schema.Schema{
 											Type: schema.TypeInt,
@@ -117,11 +117,11 @@ func resourceRetry() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"numretries": {
+									"num_retries": {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"pertrytimeout": {
+									"per_try_timeout": {
 										Type:             schema.TypeString,
 										Optional:         true,
 										DiffSuppressFunc: diffDurations,
@@ -132,12 +132,12 @@ func resourceRetry() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"baseinterval": {
+												"base_interval": {
 													Type:             schema.TypeString,
 													Required:         true,
 													DiffSuppressFunc: diffDurations,
 												},
-												"maxinterval": {
+												"max_interval": {
 													Type:             schema.TypeString,
 													Required:         true,
 													DiffSuppressFunc: diffDurations,
@@ -145,7 +145,7 @@ func resourceRetry() *schema.Resource {
 											},
 										},
 									},
-									"retryon": {
+									"retry_on": {
 										Type: schema.TypeList,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
@@ -161,7 +161,7 @@ func resourceRetry() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"maxconnectattempts": {
+									"max_connect_attempts": {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
@@ -361,11 +361,11 @@ func createKumaRetryConfFromMap(confMap map[string]interface{}) *mesh_proto.Retr
 func createKumaRetryConfHTTPFromMap(httpMap map[string]interface{}) *mesh_proto.Retry_Conf_Http {
 	http := &mesh_proto.Retry_Conf_Http{}
 
-	if numRetries, ok := httpMap["numretries"].(int); ok {
+	if numRetries, ok := httpMap["num_retries"].(int); ok {
 		http.NumRetries = &wrappers.UInt32Value{Value: uint32(numRetries)}
 	}
 
-	if perTryTimeout, ok := httpMap["pertrytimeout"].(string); ok {
+	if perTryTimeout, ok := httpMap["per_try_timeout"].(string); ok {
 		duration, _ := readDurationFromString(perTryTimeout)
 		http.PerTryTimeout = duration
 	}
@@ -374,7 +374,7 @@ func createKumaRetryConfHTTPFromMap(httpMap map[string]interface{}) *mesh_proto.
 		http.BackOff = createKumaRetryConfHTTPBackOffFromMap(backOffSet[0].(map[string]interface{}))
 	}
 
-	if retriableStatusCodes, ok := httpMap["retriablestatuscodes"].([]interface{}); ok {
+	if retriableStatusCodes, ok := httpMap["retriable_status_codes"].([]interface{}); ok {
 		uIntArray := make([]uint32, 0, len(http.RetriableStatusCodes))
 
 		for _, data := range retriableStatusCodes {
@@ -390,11 +390,11 @@ func createKumaRetryConfHTTPFromMap(httpMap map[string]interface{}) *mesh_proto.
 func createKumaRetryConfGRPCFromMap(grpcMap map[string]interface{}) *mesh_proto.Retry_Conf_Grpc {
 	grpc := &mesh_proto.Retry_Conf_Grpc{}
 
-	if numRetries, ok := grpcMap["numretries"].(int); ok {
+	if numRetries, ok := grpcMap["num_retries"].(int); ok {
 		grpc.NumRetries = &wrappers.UInt32Value{Value: uint32(numRetries)}
 	}
 
-	if perTryTimeout, ok := grpcMap["pertrytimeout"].(string); ok {
+	if perTryTimeout, ok := grpcMap["per_try_timeout"].(string); ok {
 		duration, _ := readDurationFromString(perTryTimeout)
 		grpc.PerTryTimeout = duration
 	}
@@ -403,7 +403,7 @@ func createKumaRetryConfGRPCFromMap(grpcMap map[string]interface{}) *mesh_proto.
 		grpc.BackOff = createKumaRetryConfHTTPBackOffFromMap(backOffSet[0].(map[string]interface{}))
 	}
 
-	if retryOn, ok := grpcMap["retryon"].([]interface{}); ok {
+	if retryOn, ok := grpcMap["retry_on"].([]interface{}); ok {
 		uIntArray := make([]mesh_proto.Retry_Conf_Grpc_RetryOn, 0, len(grpc.RetryOn))
 
 		for _, data := range retryOn {
@@ -421,7 +421,7 @@ func createKumaRetryConfGRPCFromMap(grpcMap map[string]interface{}) *mesh_proto.
 func createKumaRetryConfTCPFromMap(tcpMap map[string]interface{}) *mesh_proto.Retry_Conf_Tcp {
 	tcp := &mesh_proto.Retry_Conf_Tcp{}
 
-	if maxConnectAttempts, ok := tcpMap["maxconnectattempts"].(int); ok {
+	if maxConnectAttempts, ok := tcpMap["max_connect_attempts"].(int); ok {
 		tcp.MaxConnectAttempts = uint32(maxConnectAttempts)
 	}
 
@@ -431,12 +431,12 @@ func createKumaRetryConfTCPFromMap(tcpMap map[string]interface{}) *mesh_proto.Re
 func createKumaRetryConfHTTPBackOffFromMap(backOffMap map[string]interface{}) *mesh_proto.Retry_Conf_BackOff {
 	backOff := &mesh_proto.Retry_Conf_BackOff{}
 
-	if baseInterval, ok := backOffMap["baseinterval"].(string); ok {
+	if baseInterval, ok := backOffMap["base_interval"].(string); ok {
 		duration, _ := readDurationFromString(baseInterval)
 		backOff.BaseInterval = duration
 	}
 
-	if maxInterval, ok := backOffMap["maxinterval"].(string); ok {
+	if maxInterval, ok := backOffMap["max_interval"].(string); ok {
 		duration, _ := readDurationFromString(maxInterval)
 		backOff.MaxInterval = duration
 	}
@@ -478,11 +478,11 @@ func flattenKumaRetryConfHTTP(http *mesh_proto.Retry_Conf_Http) []interface{} {
 	}
 
 	if http.NumRetries != nil {
-		httpMap["numretries"] = int(http.NumRetries.GetValue())
+		httpMap["num_retries"] = int(http.NumRetries.GetValue())
 	}
 
 	if http.PerTryTimeout != nil {
-		httpMap["pertrytimeout"] = http.PerTryTimeout.AsDuration().String()
+		httpMap["per_try_timeout"] = http.PerTryTimeout.AsDuration().String()
 	}
 
 	if http.BackOff != nil {
@@ -495,7 +495,7 @@ func flattenKumaRetryConfHTTP(http *mesh_proto.Retry_Conf_Http) []interface{} {
 		for _, data := range http.RetriableStatusCodes {
 			intArray = append(intArray, int(data))
 		}
-		httpMap["retriablestatuscodes"] = intArray
+		httpMap["retriable_status_codes"] = intArray
 	}
 
 	httpSet = append(httpSet, httpMap)
@@ -511,11 +511,11 @@ func flattenKumaRetryConfGRPC(grpc *mesh_proto.Retry_Conf_Grpc) []interface{} {
 	}
 
 	if grpc.NumRetries != nil {
-		grpcMap["numretries"] = int(grpc.NumRetries.GetValue())
+		grpcMap["num_retries"] = int(grpc.NumRetries.GetValue())
 	}
 
 	if grpc.PerTryTimeout != nil {
-		grpcMap["pertrytimeout"] = grpc.PerTryTimeout.AsDuration().String()
+		grpcMap["per_try_timeout"] = grpc.PerTryTimeout.AsDuration().String()
 	}
 
 	if grpc.BackOff != nil {
@@ -531,7 +531,7 @@ func flattenKumaRetryConfGRPC(grpc *mesh_proto.Retry_Conf_Grpc) []interface{} {
 				stringArray = append(stringArray, val)
 			}
 		}
-		grpcMap["retryon"] = stringArray
+		grpcMap["retry_on"] = stringArray
 	}
 
 	grpcSet = append(grpcSet, grpcMap)
@@ -547,7 +547,7 @@ func flattenKumaRetryConfTCP(tcp *mesh_proto.Retry_Conf_Tcp) []interface{} {
 		return tcpSet
 	}
 
-	tcpMap["maxconnectattempts"] = tcp.MaxConnectAttempts
+	tcpMap["max_connect_attempts"] = tcp.MaxConnectAttempts
 
 	tcpSet = append(tcpSet, tcpMap)
 	return tcpSet
@@ -562,11 +562,11 @@ func flattenKumaRetryConfBackoff(backoff *mesh_proto.Retry_Conf_BackOff) []inter
 	}
 
 	if backoff.BaseInterval != nil {
-		backOffMap["baseinterval"] = backoff.BaseInterval.AsDuration().String()
+		backOffMap["base_interval"] = backoff.BaseInterval.AsDuration().String()
 	}
 
 	if backoff.MaxInterval != nil {
-		backOffMap["maxinterval"] = backoff.MaxInterval.AsDuration().String()
+		backOffMap["max_interval"] = backoff.MaxInterval.AsDuration().String()
 	}
 
 	backOffSet = append(backOffSet, backOffMap)
