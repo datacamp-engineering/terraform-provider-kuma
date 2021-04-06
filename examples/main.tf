@@ -110,3 +110,7 @@ output "test_permission_name" {
 output "test_retry_name" {
   value = kuma_retry.test_retry.name
 }
+
+output "test_circuit_breaker_name" {
+  value = kuma_circuit_breaker.test_circuit_breaker.name
+}
