@@ -88,7 +88,7 @@ func resourceCircuitBreaker() *schema.Resource {
 						"detectors": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
-							Optional: true,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"total_errors": {
