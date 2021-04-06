@@ -78,7 +78,7 @@ func resourceCircuitBreaker() *schema.Resource {
 							DiffSuppressFunc: diffDurationsCircuitBreaker,
 						},
 						"max_ejection_percent": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Optional: true,
 						},
 						"split_external_and_local_errors": {
@@ -130,7 +130,7 @@ func resourceCircuitBreaker() *schema.Resource {
 											},
 										},
 									},
-									"standart_deviation": {
+									"standard_deviation": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
@@ -140,7 +140,7 @@ func resourceCircuitBreaker() *schema.Resource {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
-												"minimun_hosts": {
+												"minimum_hosts": {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
@@ -161,11 +161,11 @@ func resourceCircuitBreaker() *schema.Resource {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
-												"minimun_hosts": {
+												"minimum_hosts": {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
-												"treshold": {
+												"threshold": {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
@@ -360,7 +360,7 @@ func createKumaCircuitBreakerConfFromMap(confMap map[string]interface{}) *mesh_p
 		conf.BaseEjectionTime = duration
 	}
 
-	if maxEjectionPercent, ok := confMap["max_ejection_persent"].(int); ok {
+	if maxEjectionPercent, ok := confMap["max_ejection_percent"].(int); ok {
 		conf.MaxEjectionPercent = &wrappers.UInt32Value{Value: uint32(maxEjectionPercent)}
 	}
 
@@ -386,12 +386,16 @@ func createKumaCircuitBreakerConfDetectorsFromMap(detectorsMap map[string]interf
 		detectors.GatewayErrors = createKumaRetryConfDetectorsErrorsFromMap(gatewayErrorsSet[0].(map[string]interface{}))
 	}
 
-	if localErrorsSet, ok := detectorsMap["total_errors"].([]interface{}); ok && len(localErrorsSet) > 0 {
+	if localErrorsSet, ok := detectorsMap["local_errors"].([]interface{}); ok && len(localErrorsSet) > 0 {
 		detectors.LocalErrors = createKumaRetryConfDetectorsErrorsFromMap(localErrorsSet[0].(map[string]interface{}))
 	}
 
 	if standardDeviation, ok := detectorsMap["standard_deviation"].([]interface{}); ok && len(standardDeviation) > 0 {
 		detectors.StandardDeviation = createKumaRetryConfDetectorsStandardDeviationFromMap(standardDeviation[0].(map[string]interface{}))
+	}
+
+	if failure, ok := detectorsMap["failure"].([]interface{}); ok && len(failure) > 0 {
+		detectors.Failure = createKumaRetryConfDetectorsFailureFromMap(failure[0].(map[string]interface{}))
 	}
 
 	return detectors
@@ -414,12 +418,12 @@ func createKumaRetryConfDetectorsStandardDeviationFromMap(standardDeviationMap m
 		standardDeviation.RequestVolume = &wrappers.UInt32Value{Value: uint32(requestVolumeVal)}
 	}
 
-	if minimunHostsVal, ok := standardDeviationMap["minimun_hosts"].(int); ok {
-		standardDeviation.MinimumHosts = &wrappers.UInt32Value{Value: uint32(minimunHostsVal)}
+	if minimumHostsVal, ok := standardDeviationMap["minimum_hosts"].(int); ok {
+		standardDeviation.MinimumHosts = &wrappers.UInt32Value{Value: uint32(minimumHostsVal)}
 	}
 
-	if factorVal, ok := standardDeviationMap["factor"].(wrappers.DoubleValue); ok {
-		standardDeviation.Factor = &factorVal
+	if factorVal, ok := standardDeviationMap["factor"].(float64); ok {
+		standardDeviation.Factor = &wrappers.DoubleValue{Value: factorVal}
 	}
 
 	return standardDeviation
@@ -432,11 +436,11 @@ func createKumaRetryConfDetectorsFailureFromMap(failureMap map[string]interface{
 		failure.RequestVolume = &wrappers.UInt32Value{Value: uint32(requestVolumeVal)}
 	}
 
-	if minimunHostsVal, ok := failureMap["minimun_hosts"].(int); ok {
-		failure.MinimumHosts = &wrappers.UInt32Value{Value: uint32(minimunHostsVal)}
+	if minimumHostsVal, ok := failureMap["minimum_hosts"].(int); ok {
+		failure.MinimumHosts = &wrappers.UInt32Value{Value: uint32(minimumHostsVal)}
 	}
 
-	if factorVal, ok := failureMap["factor"].(int); ok {
+	if factorVal, ok := failureMap["threshold"].(int); ok {
 		failure.Threshold = &wrappers.UInt32Value{Value: uint32(factorVal)}
 	}
 
@@ -447,6 +451,126 @@ func flattenKumaCircuitBreakerConf(conf *mesh_proto.CircuitBreaker_Conf) []inter
 	confMap := make(map[string]interface{})
 	confSet := make([]interface{}, 0, 1)
 
+	if conf == nil {
+		return confSet
+	}
+
+	if conf.Interval != nil {
+		confMap["interval"] = conf.Interval.AsDuration().String()
+	}
+
+	if conf.BaseEjectionTime != nil {
+		confMap["base_ejection_time"] = conf.BaseEjectionTime.AsDuration().String()
+	}
+
+	if conf.MaxEjectionPercent != nil {
+		confMap["max_ejection_percent"] = int(conf.MaxEjectionPercent.Value)
+	}
+
+	confMap["split_external_and_local_errors"] = conf.SplitExternalAndLocalErrors
+
+	if conf.Detectors != nil {
+		confMap["detectors"] = flattenKumaCircuitBreakerConfDetectors(conf.Detectors)
+	}
+
 	confSet = append(confSet, confMap)
 	return confSet
+}
+
+func flattenKumaCircuitBreakerConfDetectors(detectors *mesh_proto.CircuitBreaker_Conf_Detectors) []interface{} {
+	detectorsMap := make(map[string]interface{})
+
+	detectorsSet := make([]interface{}, 0, 1)
+
+	if detectors == nil {
+		return detectorsSet
+	}
+
+	if detectors.TotalErrors != nil {
+		detectorsMap["total_errors"] = flattenKumaCircuitBreakerConfDetectorsErrors(detectors.TotalErrors)
+	}
+
+	if detectors.LocalErrors != nil {
+		detectorsMap["local_errors"] = flattenKumaCircuitBreakerConfDetectorsErrors(detectors.LocalErrors)
+	}
+
+	if detectors.GatewayErrors != nil {
+		detectorsMap["gateway_errors"] = flattenKumaCircuitBreakerConfDetectorsErrors(detectors.GatewayErrors)
+	}
+
+	if detectors.StandardDeviation != nil {
+		detectorsMap["standard_deviation"] = flattenKumaCircuitBreakerConfDetectorsStandardDeviation(detectors.StandardDeviation)
+	}
+
+	if detectors.Failure != nil {
+		detectorsMap["failure"] = flattenKumaCircuitBreakerConfDetectorsFailure(detectors.Failure)
+	}
+
+	detectorsSet = append(detectorsSet, detectorsMap)
+	return detectorsSet
+
+}
+
+func flattenKumaCircuitBreakerConfDetectorsErrors(errors *mesh_proto.CircuitBreaker_Conf_Detectors_Errors) []interface{} {
+	errorsMap := make(map[string]interface{})
+	errorsSet := make([]interface{}, 0, 1)
+	if errors == nil {
+		return errorsSet
+	}
+
+	if errors.Consecutive != nil {
+		errorsMap["consecutive"] = int(errors.Consecutive.GetValue())
+	}
+
+	errorsSet = append(errorsSet, errorsMap)
+	return errorsSet
+
+}
+
+func flattenKumaCircuitBreakerConfDetectorsStandardDeviation(standardDeviation *mesh_proto.CircuitBreaker_Conf_Detectors_StandardDeviation) []interface{} {
+	standardDeviationMap := make(map[string]interface{})
+	standardDeviationSet := make([]interface{}, 0, 1)
+
+	if standardDeviation == nil {
+		return standardDeviationSet
+	}
+
+	if standardDeviation.RequestVolume != nil {
+		standardDeviationMap["request_volume"] = int(standardDeviation.RequestVolume.GetValue())
+	}
+
+	if standardDeviation.MinimumHosts != nil {
+		standardDeviationMap["minimum_hosts"] = int(standardDeviation.MinimumHosts.GetValue())
+	}
+
+	if standardDeviation.Factor != nil {
+		standardDeviationMap["factor"] = standardDeviation.Factor.GetValue()
+	}
+
+	standardDeviationSet = append(standardDeviationSet, standardDeviationMap)
+	return standardDeviationSet
+}
+
+func flattenKumaCircuitBreakerConfDetectorsFailure(failure *mesh_proto.CircuitBreaker_Conf_Detectors_Failure) []interface{} {
+	failureMap := make(map[string]interface{})
+	failureSet := make([]interface{}, 0, 1)
+
+	if failure == nil {
+		return failureSet
+	}
+
+	if failure.RequestVolume != nil {
+		failureMap["request_volume"] = int(failure.RequestVolume.GetValue())
+	}
+
+	if failure.MinimumHosts != nil {
+		failureMap["minimum_hosts"] = int(failure.MinimumHosts.GetValue())
+	}
+
+	if failure.Threshold != nil {
+		failureMap["threshold"] = int(failure.Threshold.GetValue())
+	}
+
+	failureSet = append(failureSet, failureMap)
+	return failureSet
 }
