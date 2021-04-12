@@ -22,11 +22,14 @@ func TestKumaProvider(t *testing.T) {
 	defer docker.RunDockerCompose(t, dockerOptions, "down")
 	defer terraform.Destroy(t, terraformOptions)
 
-	docker.RunDockerCompose(t, dockerOptions, "up", "-d")
+	// docker.RunDockerCompose(t, dockerOptions, "up", "-d")
 	// Run "terraform init" and "terraform apply". Fail the test if there are any errors.
 	terraform.InitAndApply(t, terraformOptions)
 
 	permissionName := terraform.Output(t, terraformOptions, "test_permission_name")
+	retryName := terraform.Output(t, terraformOptions, "test_retry_name")
 
 	assert.Equal(t, "test_permission", permissionName)
+	assert.Equal(t, "test_retry", retryName)
+
 }

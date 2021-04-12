@@ -59,7 +59,10 @@ resource "kuma_retry" "test_retry" {
 }
 
 
-# output "yolo_permission_name" {
-#   # value = kuma_traffic_permission.yolo_permission.name
-#   # value2 = kuma_retry.yolo_retry.name
-# }
+output "test_permission_name" {
+  value = kuma_traffic_permission.test_permission.name
+}
+
+output "test_retry_name" {
+  value = kuma_retry.test_retry.name
+}
