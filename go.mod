@@ -3,9 +3,11 @@ module github.com/nickvdyck/terraform-provider-kuma
 go 1.15
 
 require (
+	github.com/golang/protobuf v1.4.3
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.2.0
 	github.com/kumahq/kuma v0.0.0-20210223093449-638b0a5fcc1f
 	github.com/kumahq/kuma/api v0.0.0-00010101000000-000000000000
+	google.golang.org/protobuf v1.25.0
 )
 
 replace (
