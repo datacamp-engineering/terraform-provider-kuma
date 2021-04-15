@@ -22,7 +22,7 @@ func TestKumaProvider(t *testing.T) {
 	defer docker.RunDockerCompose(t, dockerOptions, "down")
 	defer terraform.Destroy(t, terraformOptions)
 
-	// docker.RunDockerCompose(t, dockerOptions, "up", "-d")
+	docker.RunDockerCompose(t, dockerOptions, "up", "-d")
 	// Run "terraform init" and "terraform apply". Fail the test if there are any errors.
 	terraform.InitAndApply(t, terraformOptions)
 

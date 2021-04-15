@@ -37,6 +37,7 @@ setup:
 
 .PHONY: test
 test: 
+	make install
 	cd test && PATH=$(PWD)/test:${PATH} go test
 
 testacc: 
