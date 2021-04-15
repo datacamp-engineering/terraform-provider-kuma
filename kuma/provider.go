@@ -27,6 +27,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"kuma_traffic_permission": resourceTrafficPermission(),
 			"kuma_retry":              resourceRetry(),
+			"kuma_circuit_breaker":    resourceCircuitBreaker(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,

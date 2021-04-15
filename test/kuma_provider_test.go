@@ -28,8 +28,11 @@ func TestKumaProvider(t *testing.T) {
 
 	permissionName := terraform.Output(t, terraformOptions, "test_permission_name")
 	retryName := terraform.Output(t, terraformOptions, "test_retry_name")
+	circuitBreakerName := terraform.Output(t, terraformOptions, "test_circuit_breaker_name")
 
 	assert.Equal(t, "test_permission", permissionName)
 	assert.Equal(t, "test_retry", retryName)
+	assert.Equal(t, "test_circuit_breaker", circuitBreakerName)
+
 
 }
