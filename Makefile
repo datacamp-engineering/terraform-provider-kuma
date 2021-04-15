@@ -3,6 +3,13 @@ BINARY=terraform-provider-${NAME}
 VERSION=0.1
 OS_ARCH=$(shell uname -s | awk '{print tolower($$0)}' | sed "s/darwin/osx/")-amd64
 
+.PHONY: lint
+lint:
+	golangci-lint run ./...
+
+.PHONY: check
+check: lint
+
 .PHONY: default
 default: install
 
