@@ -46,3 +46,14 @@ setup:
 .PHONY: test
 test: 
 	cd test && PATH=$(PWD)/test:${PATH} go test
+
+.PHONY: examples
+examples: examples.init examples.apply
+
+.PHONY: examples.init
+examples.init:
+	cd examples && terraform init
+
+.PHONY: examples.apply
+examples.apply:
+	cd examples && terraform apply
