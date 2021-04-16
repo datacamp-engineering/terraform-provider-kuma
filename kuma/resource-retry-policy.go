@@ -332,7 +332,7 @@ func createKumaRetryFromResourceData(data *schema.ResourceData) mesh.RetryResour
 
 	if attr, ok := data.GetOk("conf"); ok {
 
-		if confArray := attr.([]interface{}); confArray != nil && len(confArray) > 0 {
+		if confArray := attr.([]interface{}); len(confArray) > 0 {
 			retry.Spec.Conf = createKumaRetryConfFromMap(confArray[0].(map[string]interface{}))
 		}
 	}

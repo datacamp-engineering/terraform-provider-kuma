@@ -15,13 +15,6 @@ func readStringFromResource(d *schema.ResourceData, key string) string {
 	return ""
 }
 
-func readArrayFromResource(d *schema.ResourceData, key string) []interface{} {
-	if attr, ok := d.GetOk(key); ok {
-		return attr.([]interface{})
-	}
-	return nil
-}
-
 func readDurationFromString(d string) (*duration.Duration, error) {
 	parsed, err := time.ParseDuration(d)
 

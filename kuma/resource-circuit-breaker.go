@@ -339,7 +339,7 @@ func createKumaCircuitBreakerFromResourceData(data *schema.ResourceData) mesh.Ci
 
 	if attr, ok := data.GetOk("conf"); ok {
 
-		if confArray := attr.([]interface{}); confArray != nil && len(confArray) > 0 {
+		if confArray := attr.([]interface{}); len(confArray) > 0 {
 			circuitBreaker.Spec.Conf = createKumaCircuitBreakerConfFromMap(confArray[0].(map[string]interface{}))
 		}
 	}

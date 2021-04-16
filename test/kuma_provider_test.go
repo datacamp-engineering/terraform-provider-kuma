@@ -33,6 +33,4 @@ func TestKumaProvider(t *testing.T) {
 	assert.Equal(t, "test_permission", permissionName)
 	assert.Equal(t, "test_retry", retryName)
 	assert.Equal(t, "test_circuit_breaker", circuitBreakerName)
-
-
 }
