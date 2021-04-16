@@ -17,6 +17,7 @@ func resourceHealthCheck() *schema.Resource {
 		CreateContext: resourceHealthCheckCreate,
 		ReadContext:   resourceHealthCheckRead,
 		UpdateContext: resourceHealthCheckUpdate,
+		DeleteContext: resourceHealthCheckDelete,
 		Schema: map[string]*schema.Schema{
 			"mesh": {
 				Type:     schema.TypeString,
@@ -290,7 +291,7 @@ func createKumaHealthCheckFromResourceData(data *schema.ResourceData) mesh.Healt
 	if attr, ok := data.GetOk("conf"); ok {
 		confMap := attr.(map[string]interface{})
 
-		if confMap != nil && len(confMap) > 0 {
+		if len(confMap) > 0 {
 			healthCheck.Spec.Conf = createKumaHealthCheckConfFromMap(confMap)
 		}
 	}
