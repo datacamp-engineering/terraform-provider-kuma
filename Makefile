@@ -3,6 +3,10 @@ BINARY=terraform-provider-${NAME}
 VERSION=0.1
 OS_ARCH=$(shell uname -s | awk '{print tolower($$0)}')_amd64
 
+.PHONY: clean
+clean:
+	rm -f examples/*.tfstate*
+
 .PHONY: lint
 lint:
 	golangci-lint run ./...
