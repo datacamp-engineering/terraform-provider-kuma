@@ -71,12 +71,10 @@ func resourceProxyTemplate() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"operation": {
 													Type:     schema.TypeString,
-													MaxItems: 1,
 													Optional: true,
 												},
 												"value": {
 													Type:     schema.TypeString,
-													MaxItems: 1,
 													Optional: true,
 												},
 												"match": {
@@ -87,12 +85,10 @@ func resourceProxyTemplate() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"name": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 															"origin": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 														},
@@ -108,12 +104,10 @@ func resourceProxyTemplate() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"operation": {
 													Type:     schema.TypeString,
-													MaxItems: 1,
 													Optional: true,
 												},
 												"value": {
 													Type:     schema.TypeString,
-													MaxItems: 1,
 													Optional: true,
 												},
 												"match": {
@@ -124,12 +118,10 @@ func resourceProxyTemplate() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"name": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 															"origin": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 														},
@@ -145,12 +137,10 @@ func resourceProxyTemplate() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"operation": {
 													Type:     schema.TypeString,
-													MaxItems: 1,
 													Optional: true,
 												},
 												"value": {
 													Type:     schema.TypeString,
-													MaxItems: 1,
 													Optional: true,
 												},
 												"match": {
@@ -161,17 +151,14 @@ func resourceProxyTemplate() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"name": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 															"origin": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 															"listener_name": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 														},
@@ -187,12 +174,10 @@ func resourceProxyTemplate() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"operation": {
 													Type:     schema.TypeString,
-													MaxItems: 1,
 													Optional: true,
 												},
 												"value": {
 													Type:     schema.TypeString,
-													MaxItems: 1,
 													Optional: true,
 												},
 												"match": {
@@ -203,17 +188,14 @@ func resourceProxyTemplate() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"name": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 															"origin": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 															"listener_name": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 														},
@@ -229,12 +211,10 @@ func resourceProxyTemplate() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"operation": {
 													Type:     schema.TypeString,
-													MaxItems: 1,
 													Optional: true,
 												},
 												"value": {
 													Type:     schema.TypeString,
-													MaxItems: 1,
 													Optional: true,
 												},
 												"match": {
@@ -245,17 +225,14 @@ func resourceProxyTemplate() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"name": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 															"origin": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 															"route_configuration_name": {
 																Type:     schema.TypeString,
-																MaxItems: 1,
 																Optional: true,
 															},
 														},
