@@ -407,8 +407,12 @@ func createKumaProxyTemplateFromResourceData(data *schema.ResourceData) mesh.Pro
 func createKumaProxyTemplateConfFromMap(confMap map[string]interface{}) *mesh_proto.ProxyTemplate_Conf {
 	conf := &mesh_proto.ProxyTemplate_Conf{}
 
-	if imports, ok := confMap["imports"].([]string); ok && len(imports) > 0 {
-		conf.Imports = imports
+	if imports, ok := confMap["imports"].([]interface{}); ok && len(imports) > 0 {
+		importsStringArray := make([]string, 0, len(imports))
+		for _, val := range imports {
+			importsStringArray = append(importsStringArray, val.(string))
+		}
+		conf.Imports = importsStringArray
 	}
 
 	if modifications, ok := confMap["modifications"].([]interface{}); ok && len(modifications) > 0 {
@@ -435,7 +439,7 @@ func createKumaProxyTemplateConfFromMap(confMap map[string]interface{}) *mesh_pr
 func createKumaProxyTemplateConfModificationsFromMap(modMap map[string]interface{}) []*mesh_proto.ProxyTemplate_Modifications {
 	modifications := make([]*mesh_proto.ProxyTemplate_Modifications, 0, 0)
 
-	if cluster, ok := modMap["cluster"].([]map[string]interface{}); ok && len(modifications) > 0 {
+	if cluster := modMap["cluster"].([]interface{}); len(cluster) > 0 {
 		kumaClusters := createKumaProxyTemplateConfModificationCluster(cluster)
 		modifications = append(modifications, kumaClusters...)
 	}
@@ -445,15 +449,29 @@ func createKumaProxyTemplateConfModificationsFromMap(modMap map[string]interface
 		modifications = append(modifications, kumaListeners...)
 	}
 
+	if networkFilter, ok := modMap["network_filter"].([]map[string]interface{}); ok && len(modifications) > 0 {
+		kumaNetworkFilter := createKumaProxyTemplateConfModificationListener(networkFilter)
+		modifications = append(modifications, kumaNetworkFilter...)
+	}
+
+	if httpFilter, ok := modMap["http_filters"].([]map[string]interface{}); ok && len(modifications) > 0 {
+		kumaHttpFilter := createKumaProxyTemplateConfModificationListener(httpFilter)
+		modifications = append(modifications, kumaHttpFilter...)
+	}
+
+	if virtualHost, ok := modMap["virtual_host"].([]map[string]interface{}); ok && len(modifications) > 0 {
+		kumaVirtualHost := createKumaProxyTemplateConfModificationListener(virtualHost)
+		modifications = append(modifications, kumaVirtualHost...)
+	}
+
 	return modifications
 }
 
-func createKumaProxyTemplateConfModificationCluster(clusters []map[string]interface{}) []*mesh_proto.ProxyTemplate_Modifications {
+func createKumaProxyTemplateConfModificationCluster(clusters []interface{}) []*mesh_proto.ProxyTemplate_Modifications {
 	kumaClusterArray := make([]*mesh_proto.ProxyTemplate_Modifications, 0, 0)
-
-	for _, clusterMap := range clusters {
+	for _, val := range clusters {
 		cluster := &mesh_proto.ProxyTemplate_Modifications_Cluster{}
-
+		clusterMap := val.(map[string]interface{})
 		if operation, ok := clusterMap["operation"].(string); ok {
 			cluster.Operation = operation
 		}
@@ -462,7 +480,7 @@ func createKumaProxyTemplateConfModificationCluster(clusters []map[string]interf
 			cluster.Value = value
 		}
 
-		if match, ok := clusterMap["match"].([]map[string]interface{}); ok {
+		if match, ok := clusterMap["match"].([]interface{}); ok && len(match) > 0 {
 			cluster.Match = createKumaProxyTemplateConfModificationClusterMatch(match[0])
 		}
 
@@ -474,9 +492,9 @@ func createKumaProxyTemplateConfModificationCluster(clusters []map[string]interf
 	return kumaClusterArray
 }
 
-func createKumaProxyTemplateConfModificationClusterMatch(matchMap map[string]interface{}) *mesh_proto.ProxyTemplate_Modifications_Cluster_Match {
+func createKumaProxyTemplateConfModificationClusterMatch(matchInterface interface{}) *mesh_proto.ProxyTemplate_Modifications_Cluster_Match {
 	match := &mesh_proto.ProxyTemplate_Modifications_Cluster_Match{}
-
+	matchMap := matchInterface.(map[string]interface{})
 	if name, ok := matchMap["name"].(string); ok {
 		match.Name = name
 	}
@@ -698,6 +716,42 @@ func flattenKumaProxyTemplateConfModifications(modifications []*mesh_proto.Proxy
 			cluster := flattenKumaProxyTemplateConfModificationCluster(modification.GetCluster())
 			clusterArray = append(clusterArray, cluster)
 
+		case *mesh_proto.ProxyTemplate_Modifications_Listener_:
+			listenerArray, ok := modificationMap["listener"]
+			if !ok {
+				listenerArray = make([]interface{}, 0, 0)
+				modificationMap["listener"] = listenerArray
+			}
+			listener := flattenKumaProxyTemplateConfModificationListener(modification.GetListener())
+			listenerArray = append(listenerArray, listener)
+
+		case *mesh_proto.ProxyTemplate_Modifications_NetworkFilter_:
+			networkFilterArray, ok := modificationMap["network_filter"]
+			if !ok {
+				networkFilterArray = make([]interface{}, 0, 0)
+				modificationMap["network_filter"] = networkFilterArray
+			}
+			networkFiter := flattenKumaProxyTemplateConfModificationNetworkFilter(modification.GetNetworkFilter())
+			networkFilterArray = append(networkFilterArray, networkFiter)
+
+		case *mesh_proto.ProxyTemplate_Modifications_HttpFilter_:
+			httpFilterArray, ok := modificationMap["http_filters"]
+			if !ok {
+				httpFilterArray = make([]interface{}, 0, 0)
+				modificationMap["http_filters"] = httpFilterArray
+			}
+			httpFilter := flattenKumaProxyTemplateConfModificationHttpFilter(modification.GetHttpFilter())
+			httpFilterArray = append(httpFilterArray, httpFilter)
+
+		case *mesh_proto.ProxyTemplate_Modifications_VirtualHost_:
+			virtualHostArray, ok := modificationMap["virtual_host"]
+			if !ok {
+				virtualHostArray = make([]interface{}, 0, 0)
+				modificationMap["virtual_host"] = virtualHostArray
+			}
+			virtualHost := flattenKumaProxyTemplateConfModificationVirtualHost(modification.GetVirtualHost())
+			virtualHostArray = append(virtualHostArray, virtualHost)
+
 		}
 
 	}
@@ -711,7 +765,9 @@ func flattenKumaProxyTemplateConfModificationCluster(cluster *mesh_proto.ProxyTe
 
 	clusterMap["operation"] = cluster.Operation
 	clusterMap["value"] = cluster.Value
-	clusterMap["match"] = flattenKumaProxyTemplateConfModificationClusterMatch(cluster.Match)
+	if cluster.Match != nil {
+		clusterMap["match"] = flattenKumaProxyTemplateConfModificationClusterMatch(cluster.Match)
+	}
 
 	return clusterMap
 }
