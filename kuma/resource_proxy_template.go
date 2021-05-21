@@ -444,22 +444,22 @@ func createKumaProxyTemplateConfModificationsFromMap(modMap map[string]interface
 		modifications = append(modifications, kumaClusters...)
 	}
 
-	if listener, ok := modMap["listener"].([]map[string]interface{}); ok && len(modifications) > 0 {
+	if listener, ok := modMap["listener"].([]interface{}); ok && len(listener) > 0 {
 		kumaListeners := createKumaProxyTemplateConfModificationListener(listener)
 		modifications = append(modifications, kumaListeners...)
 	}
 
-	if networkFilter, ok := modMap["network_filter"].([]map[string]interface{}); ok && len(modifications) > 0 {
+	if networkFilter, ok := modMap["network_filter"].([]interface{}); ok && len(networkFilter) > 0 {
 		kumaNetworkFilter := createKumaProxyTemplateConfModificationListener(networkFilter)
 		modifications = append(modifications, kumaNetworkFilter...)
 	}
 
-	if httpFilter, ok := modMap["http_filters"].([]map[string]interface{}); ok && len(modifications) > 0 {
+	if httpFilter, ok := modMap["http_filters"].([]interface{}); ok && len(httpFilter) > 0 {
 		kumaHttpFilter := createKumaProxyTemplateConfModificationListener(httpFilter)
 		modifications = append(modifications, kumaHttpFilter...)
 	}
 
-	if virtualHost, ok := modMap["virtual_host"].([]map[string]interface{}); ok && len(modifications) > 0 {
+	if virtualHost, ok := modMap["virtual_host"].([]interface{}); ok && len(virtualHost) > 0 {
 		kumaVirtualHost := createKumaProxyTemplateConfModificationListener(virtualHost)
 		modifications = append(modifications, kumaVirtualHost...)
 	}
@@ -481,7 +481,7 @@ func createKumaProxyTemplateConfModificationCluster(clusters []interface{}) []*m
 		}
 
 		if match, ok := clusterMap["match"].([]interface{}); ok && len(match) > 0 {
-			cluster.Match = createKumaProxyTemplateConfModificationClusterMatch(match[0])
+			// cluster.Match = createKumaProxyTemplateConfModificationClusterMatch(match[0])
 		}
 
 		modification := mesh_proto.ProxyTemplate_Modifications{}
@@ -506,11 +506,12 @@ func createKumaProxyTemplateConfModificationClusterMatch(matchInterface interfac
 	return match
 }
 
-func createKumaProxyTemplateConfModificationListener(listeners []map[string]interface{}) []*mesh_proto.ProxyTemplate_Modifications {
+func createKumaProxyTemplateConfModificationListener(listeners []interface{}) []*mesh_proto.ProxyTemplate_Modifications {
 	kumaListenerArray := make([]*mesh_proto.ProxyTemplate_Modifications, 0, 0)
 
-	for _, listenerMap := range listeners {
+	for _, val := range listeners {
 		listener := &mesh_proto.ProxyTemplate_Modifications_Listener{}
+		listenerMap := val.(map[string]interface{})
 
 		if operation, ok := listenerMap["operation"].(string); ok {
 			listener.Operation = operation
@@ -520,8 +521,8 @@ func createKumaProxyTemplateConfModificationListener(listeners []map[string]inte
 			listener.Value = value
 		}
 
-		if match, ok := listenerMap["match"].([]map[string]interface{}); ok {
-			listener.Match = createKumaProxyTemplateConfModificationListenerMatch(match[0])
+		if match, ok := listenerMap["match"].([]interface{}); ok && len(match) > 0 {
+			// listener.Match = createKumaProxyTemplateConfModificationListenerMatch(match[0])
 		}
 
 		modification := mesh_proto.ProxyTemplate_Modifications{}
@@ -532,8 +533,9 @@ func createKumaProxyTemplateConfModificationListener(listeners []map[string]inte
 	return kumaListenerArray
 }
 
-func createKumaProxyTemplateConfModificationListenerMatch(matchMap map[string]interface{}) *mesh_proto.ProxyTemplate_Modifications_Listener_Match {
+func createKumaProxyTemplateConfModificationListenerMatch(matchInterface interface{}) *mesh_proto.ProxyTemplate_Modifications_Listener_Match {
 	match := &mesh_proto.ProxyTemplate_Modifications_Listener_Match{}
+	matchMap := matchInterface.(map[string]interface{})
 
 	if name, ok := matchMap["name"].(string); ok {
 		match.Name = name
@@ -546,11 +548,12 @@ func createKumaProxyTemplateConfModificationListenerMatch(matchMap map[string]in
 	return match
 }
 
-func createKumaProxyTemplateConfModificationNetworkFilter(networkFilters []map[string]interface{}) []*mesh_proto.ProxyTemplate_Modifications {
+func createKumaProxyTemplateConfModificationNetworkFilter(networkFilters []interface{}) []*mesh_proto.ProxyTemplate_Modifications {
 	kumaNetworkFilterArray := make([]*mesh_proto.ProxyTemplate_Modifications, 0, 0)
 
-	for _, networkFilterMap := range networkFilters {
+	for _, val := range networkFilters {
 		networkFilter := &mesh_proto.ProxyTemplate_Modifications_NetworkFilter{}
+		networkFilterMap := val.(map[string]interface{})
 
 		if operation, ok := networkFilterMap["operation"].(string); ok {
 			networkFilter.Operation = operation
@@ -560,7 +563,7 @@ func createKumaProxyTemplateConfModificationNetworkFilter(networkFilters []map[s
 			networkFilter.Value = value
 		}
 
-		if match, ok := networkFilterMap["match"].([]map[string]interface{}); ok {
+		if match, ok := networkFilterMap["match"].([]interface{}); ok && len(match) > 0 {
 			networkFilter.Match = createKumaProxyTemplateConfModificationNetworkFilterMatch(match[0])
 		}
 
@@ -572,8 +575,9 @@ func createKumaProxyTemplateConfModificationNetworkFilter(networkFilters []map[s
 	return kumaNetworkFilterArray
 }
 
-func createKumaProxyTemplateConfModificationNetworkFilterMatch(matchMap map[string]interface{}) *mesh_proto.ProxyTemplate_Modifications_NetworkFilter_Match {
+func createKumaProxyTemplateConfModificationNetworkFilterMatch(matchInterface interface{}) *mesh_proto.ProxyTemplate_Modifications_NetworkFilter_Match {
 	match := &mesh_proto.ProxyTemplate_Modifications_NetworkFilter_Match{}
+	matchMap := matchInterface.(map[string]interface{})
 
 	if name, ok := matchMap["name"].(string); ok {
 		match.Name = name
@@ -590,11 +594,12 @@ func createKumaProxyTemplateConfModificationNetworkFilterMatch(matchMap map[stri
 	return match
 }
 
-func createKumaProxyTemplateConfModificationHttpFilter(httpFilters []map[string]interface{}) []*mesh_proto.ProxyTemplate_Modifications {
+func createKumaProxyTemplateConfModificationHttpFilter(httpFilters []interface{}) []*mesh_proto.ProxyTemplate_Modifications {
 	kumaHttpFilterArray := make([]*mesh_proto.ProxyTemplate_Modifications, 0, 0)
 
-	for _, networkFilterMap := range httpFilters {
+	for _, val := range httpFilters {
 		httpFilter := &mesh_proto.ProxyTemplate_Modifications_HttpFilter{}
+		networkFilterMap := val.(map[string]interface{})
 
 		if operation, ok := networkFilterMap["operation"].(string); ok {
 			httpFilter.Operation = operation
@@ -604,7 +609,7 @@ func createKumaProxyTemplateConfModificationHttpFilter(httpFilters []map[string]
 			httpFilter.Value = value
 		}
 
-		if match, ok := networkFilterMap["match"].([]map[string]interface{}); ok {
+		if match, ok := networkFilterMap["match"].([]interface{}); ok && len(match) > 0 {
 			httpFilter.Match = createKumaProxyTemplateConfModificationHttpFilterMatch(match[0])
 		}
 
@@ -616,8 +621,9 @@ func createKumaProxyTemplateConfModificationHttpFilter(httpFilters []map[string]
 	return kumaHttpFilterArray
 }
 
-func createKumaProxyTemplateConfModificationHttpFilterMatch(matchMap map[string]interface{}) *mesh_proto.ProxyTemplate_Modifications_HttpFilter_Match {
+func createKumaProxyTemplateConfModificationHttpFilterMatch(matchInterface interface{}) *mesh_proto.ProxyTemplate_Modifications_HttpFilter_Match {
 	match := &mesh_proto.ProxyTemplate_Modifications_HttpFilter_Match{}
+	matchMap := matchInterface.(map[string]interface{})
 
 	if name, ok := matchMap["name"].(string); ok {
 		match.Name = name
@@ -634,11 +640,12 @@ func createKumaProxyTemplateConfModificationHttpFilterMatch(matchMap map[string]
 	return match
 }
 
-func createKumaProxyTemplateConfModificationVirtualHost(virtualHosts []map[string]interface{}) []*mesh_proto.ProxyTemplate_Modifications {
+func createKumaProxyTemplateConfModificationVirtualHost(virtualHosts []interface{}) []*mesh_proto.ProxyTemplate_Modifications {
 	kumaVirtualHostArray := make([]*mesh_proto.ProxyTemplate_Modifications, 0, 0)
 
-	for _, virtualHostMap := range virtualHosts {
+	for _, val := range virtualHosts {
 		virtualHost := &mesh_proto.ProxyTemplate_Modifications_VirtualHost{}
+		virtualHostMap := val.(map[string]interface{})
 
 		if operation, ok := virtualHostMap["operation"].(string); ok {
 			virtualHost.Operation = operation
@@ -648,7 +655,7 @@ func createKumaProxyTemplateConfModificationVirtualHost(virtualHosts []map[strin
 			virtualHost.Value = value
 		}
 
-		if match, ok := virtualHostMap["match"].([]map[string]interface{}); ok {
+		if match, ok := virtualHostMap["match"].([]interface{}); ok && len(match) > 0 {
 			virtualHost.Match = createKumaProxyTemplateConfModificationVirtualHostMatch(match[0])
 		}
 
@@ -660,8 +667,9 @@ func createKumaProxyTemplateConfModificationVirtualHost(virtualHosts []map[strin
 	return kumaVirtualHostArray
 }
 
-func createKumaProxyTemplateConfModificationVirtualHostMatch(matchMap map[string]interface{}) *mesh_proto.ProxyTemplate_Modifications_VirtualHost_Match {
+func createKumaProxyTemplateConfModificationVirtualHostMatch(matchInterface interface{}) *mesh_proto.ProxyTemplate_Modifications_VirtualHost_Match {
 	match := &mesh_proto.ProxyTemplate_Modifications_VirtualHost_Match{}
+	matchMap := matchInterface.(map[string]interface{})
 
 	if name, ok := matchMap["name"].(string); ok {
 		match.Name = name
@@ -786,7 +794,9 @@ func flattenKumaProxyTemplateConfModificationListener(listener *mesh_proto.Proxy
 
 	listenerMap["operation"] = listener.Operation
 	listenerMap["value"] = listener.Value
-	listenerMap["match"] = flattenKumaProxyTemplateConfModificationListenerMatch(listener.Match)
+	if listener.Match != nil {
+		listenerMap["match"] = flattenKumaProxyTemplateConfModificationListenerMatch(listener.Match)
+	}
 
 	return listenerMap
 }

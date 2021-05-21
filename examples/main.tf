@@ -127,7 +127,7 @@ resource "kuma_proxy_template" "test_proxy_template" {
           origin = "inbound"
         }
        }
-       listener{
+      listener{
         operation = "add"
         value = <<EOT
           name: test-listener
@@ -140,8 +140,8 @@ resource "kuma_proxy_template" "test_proxy_template" {
           name = "test_cluster"
           origin = "inbound"
         }
-       }
-       network_filter{
+      }
+      network_filter{
         operation = "add"
         value = <<EOT
           name: test-cluster
