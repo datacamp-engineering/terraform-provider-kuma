@@ -142,11 +142,12 @@ resource "kuma_proxy_template" "test_proxy_template" {
         }
       }
       network_filter{
-        operation = "add"
+        operation = "addFirst"
         value = <<EOT
-          name: test-cluster
-          connectTimeout: 5s
-          type: STATIC
+          name: envoy.filters.network.tcp_proxy
+          typedConfig:
+            '@type': type.googleapis.com/envoy.config.filter.network.tcp_proxy.v2.TcpProxy
+            idleTimeout: 10s
           EOT
         match{
           name = "envoy.filters.network.tcp_proxy"
@@ -168,22 +169,22 @@ resource "kuma_proxy_template" "test_proxy_template" {
           origin = "inbound"
         }
       }
-      virtual_host{
-        operation = "add"
-        value = <<EOT
-          name: backend
-          domains:
-          - "*"
-          routes:
-          - match:
-              prefix: /
-            route:
-              cluster: backend
-          EOT
-        match{
+      # virtual_host{
+      #   operation = "add"
+      #   value = <<EOT
+      #     name: backend
+      #     domains:
+      #     - "*"
+      #     routes:
+      #     - match:
+      #         prefix: /
+      #       route:
+      #         cluster: backend
+      #     EOT
+      #   match{
           
-        }
-      }
+      #   }
+      # }
     }
   }
 }
